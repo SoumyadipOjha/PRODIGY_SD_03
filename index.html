@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Management System</title>
+    <style>
+        body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(to right, #74ebd5, #ACB6E5);
+    margin: 0;
+    color: #333;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+h1 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 2em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    outline: none;
+    width: calc(100% - 32px);
+    box-sizing: border-box;
+    font-size: 1em;
+}
+
+button {
+    padding: 15px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s, transform 0.3s;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+.contacts-list {
+    text-align: left;
+}
+
+.contact {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 10px;
+    margin: 15px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.contact:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.contact div {
+    display: flex;
+    flex-direction: column;
+}
+
+.contact button {
+    padding: 10px;
+    margin-left: 10px;
+    background-color: #ff6f61;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.contact button:hover {
+    background-color: #ff3d3d;
+}
+
+.edit-mode {
+    background: #e1f5fe;
+}
+
+.edit-mode input {
+    border: 1px solid #007bff;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    input {
+        width: calc(100% - 22px);
+        padding: 10px;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+</style></head>
+
+<body>
+    <div class="container">
+        <h1>Contact Management System</h1>
+        <div class="form-container">
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="phone" placeholder="Phone">
+            <input type="email" id="email" placeholder="Email">
+            <button onclick="addContact()">Add Contact</button>
+        </div>
+        <div id="contacts-list" class="contacts-list">
+            <!-- Contact list will be displayed here -->
+        </div>
+    </div>
+    <script>
+        let contacts = JSON.parse(localStorage.getItem('contacts')) || [];
+
+        function saveContacts() {
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+        }
+
+        function addContact() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const email = document.getElementById('email').value;
+
+            if (!name || !phone || !email) {
+                alert("All fields are required!");
+                return;
+            }
+
+            const contact = { name, phone, email };
+            contacts.push(contact);
+            saveContacts();
+            renderContacts();
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('email').value = '';
+        }
+
+        function renderContacts() {
+            const contactsList = document.getElementById('contacts-list');
+            contactsList.innerHTML = '';
+
+            contacts.forEach((contact, index) => {
+                const contactDiv = document.createElement('div');
+                contactDiv.className = 'contact';
+
+                const contactInfo = document.createElement('div');
+                contactInfo.innerHTML = `
+            <strong>${contact.name}</strong>
+            <span>${contact.phone}</span>
+            <span>${contact.email}</span>
+        `;
+
+                const buttons = document.createElement('div');
+                buttons.innerHTML = `
+            <button onclick="editContact(${index})">Edit</button>
+            <button onclick="deleteContact(${index})">Delete</button>
+        `;
+
+                contactDiv.appendChild(contactInfo);
+                contactDiv.appendChild(buttons);
+
+                contactsList.appendChild(contactDiv);
+            });
+        }
+
+        function editContact(index) {
+            const contactDiv = document.querySelectorAll('.contact')[index];
+            contactDiv.classList.add('edit-mode');
+
+            const contactInfo = contactDiv.children[0];
+            const contact = contacts[index];
+
+            contactInfo.innerHTML = `
+        <input type="text" id="edit-name-${index}" value="${contact.name}">
+        <input type="text" id="edit-phone-${index}" value="${contact.phone}">
+        <input type="email" id="edit-email-${index}" value="${contact.email}">
+    `;
+
+            const buttons = contactDiv.children[1];
+            buttons.innerHTML = `
+        <button onclick="saveEdit(${index})">Save</button>
+        <button onclick="cancelEdit()">Cancel</button>
+    `;
+        }
+
+        function saveEdit(index) {
+            const name = document.getElementById(`edit-name-${index}`).value;
+            const phone = document.getElementById(`edit-phone-${index}`).value;
+            const email = document.getElementById(`edit-email-${index}`).value;
+
+            if (!name || !phone || !email) {
+                alert("All fields are required!");
+                return;
+            }
+
+            contacts[index] = { name, phone, email };
+            saveContacts();
+            renderContacts();
+        }
+
+        function cancelEdit() {
+            renderContacts();
+        }
+
+        function deleteContact(index) {
+            contacts.splice(index, 1);
+            saveContacts();
+            renderContacts();
+        }
+
+        // Initial render
+        renderContacts();
+
+    </script>
+</body>
+
+</html>
